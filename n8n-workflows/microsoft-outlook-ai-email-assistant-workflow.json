@@ -1,0 +1,974 @@
+{
+  "name": "Microsoft Outlook AI Email Assistant",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "a923cfb0-64fe-499a-8f0e-13fc848731df",
+      "name": "When clicking ‘Test workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        980,
+        540
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "# Microsoft Outlook AI Email Assistant",
+        "height": 107,
+        "width": 675,
+        "color": 5
+      },
+      "id": "ea865c8e-5c73-4d37-97d1-0349a265b9a4",
+      "name": "Sticky Note8",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2880,
+        -600
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Outlook Business with filters\nFilters:\n```\nflag/flagStatus eq 'notFlagged' and not categories/any()\n```\n\nThese filters ensure we do not process flagged emails or email that already have a category set.",
+        "height": 401,
+        "width": 612
+      },
+      "id": "c835042f-421b-44a0-8dc4-686ac638b358",
+      "name": "Sticky Note10",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1300,
+        60
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 10,
+        "output": "fields",
+        "fields": [
+          "flag",
+          "from",
+          "importance",
+          "replyTo",
+          "sender",
+          "subject",
+          "toRecipients",
+          "body",
+          "categories",
+          "isRead"
+        ],
+        "filtersUI": {
+          "values": {
+            "filters": {
+              "custom": "flag/flagStatus eq 'notFlagged' and not categories/any()",
+              "foldersToInclude": [
+                "AAMkADYyNmQ0YWE1LWQxYjEtNDBhYS1hODI3LTg3MTkyNDAwMzE5NwAuAAAAAAA44w-ZZoU7QLO9GQAyv8UcAQAkfR2JHrRET4CmwDGznLN6AAAAAAEMAAA="
+              ]
+            }
+          }
+        },
+        "options": {}
+      },
+      "id": "51ae8a4e-2d37-4118-a538-cd0fd4f427f7",
+      "name": "Microsoft Outlook23",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "position": [
+        1540,
+        240
+      ],
+      "typeVersion": 2,
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "nv0cz3C6VZDzEgtR",
+          "name": "Microsoft365 Email Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Sanitise Email \nRemoves HTML and useless information in preparation for the AI Agent",
+        "height": 401,
+        "width": 459,
+        "color": 6
+      },
+      "id": "a144adad-6fef-4f76-a06e-c889e8f16080",
+      "name": "Sticky Note11",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2020,
+        60
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Get Rules & Categories\nEdit the airtables to set your own categories, rules, contacts and/or delete rules. ",
+        "height": 558,
+        "width": 736,
+        "color": 4
+      },
+      "id": "92ccac8f-9ce3-4f81-a499-e55835be3fc7",
+      "name": "Sticky Note12",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2020,
+        580
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "5b304e0f-002c-42c6-82a0-9ab1dc858861",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        3860,
+        460
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "l2JgpErNc5namHVH",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "messageId": {
+          "__rl": true,
+          "value": "={{ $json.output.id }}",
+          "mode": "id"
+        },
+        "updateFields": {
+          "categories": "={{ [$json.output.category] }}"
+        }
+      },
+      "id": "210816e8-6a1f-4e63-a90e-d953e0e87ccd",
+      "name": "Set Category",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "position": [
+        4500,
+        240
+      ],
+      "typeVersion": 2,
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "nv0cz3C6VZDzEgtR",
+          "name": "Microsoft365 Email Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"id\": {\n      \"type\": \"string\",\n      \"description\": \"The email id\"\n    },\n    \"subject\": {\n      \"type\": \"string\",\n      \"description\": \"The email subject line\"\n    },\n    \"category\": {\n      \"type\": \"string\",\n      \"description\": \"Primary classification of the email\"\n    },\n    \"subCategory\": {\n      \"type\": \"string\",\n      \"description\": \"Optional sub-classification if applicable\"\n    },\n    \"analysis\": {\n      \"type\": \"string\",\n      \"description\": \"Reasoning behind the categorization\"\n    }\n  },\n  \"required\": [\"id\",\"subject\", \"category\", \"analysis\"]\n}"
+      },
+      "id": "fe4f8e8f-6a5c-4b7b-b5f7-10f1f374397c",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        4040,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6e4ecd0c-d151-4e5b-8d66-558f9f9ec3b0",
+              "leftValue": "={{ $('AI: Analyse Email').item.json.output.subCategory }}",
+              "rightValue": "Action",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "489028ca-f265-4ea2-b8dd-64dd6b06c8f6",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4740,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "messageId": {
+          "__rl": true,
+          "value": "={{ $('AI: Analyse Email').item.json.output.id }}",
+          "mode": "id"
+        },
+        "updateFields": {
+          "importance": "High"
+        }
+      },
+      "id": "e2a27071-bac6-4a67-94fb-93e7ac218c89",
+      "name": "Set Importance",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        5000,
+        220
+      ],
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "nv0cz3C6VZDzEgtR",
+          "name": "Microsoft365 Email Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Categorise the following email:\n<email>\n{{ $('Loop Over Items').item.json.toJsonString() }}\n</email>\n\n<Contact>\n{{ $('Contact').all().toJsonString() }}\n</Contact>\n\n<DeleteRules>\n{{ $('Delete Rules').all().toJsonString() }}\n</DeleteRules>\n\n<Categories>\n{{ $('Categories').all().toJsonString() }}\n</Categories>\n\nEnsure your final output is valid JSON with no additional text or token in the following format:\n\n{\n  \"subject\": \"SUBJECT_LINE\",1\n  \"category\": \"CATEGORY\",\n  \"subCategory\": \"SUBCATEGORY\", //use sparingly\n  \"analysis\": \"ANALYSIS_REASONING\"\n}\n\nRemember you can only use ONE of the following category 'Name' values from the 'Categories' defined above. No other categories can be used. Use the subcategory for additional context, for example, if a client email requires action or if a supplier email requires action. Do not create any additional subcategories; you can only use ONE of the category 'Name' values from the 'Categories' defined above.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=Categories: \"\"\"{{ $('Categories').all().toJsonString() }}\"\"\"\n\nYou are an AI email assistant for the *insert role & title*. Your task is to categorize incoming emails using one of the category 'Name' values defined in 'Categories' above.\n\nYou may also use the subcategory:\n- Action\n\nInstructions:\nAnalyse the email subject, body, and sender's email address to determine the appropriate category by referring to the 'Usage', 'Sender Indicators' and 'Subject Indicators' defined in the 'Categories' above.\n\n\nOutput Format:\nProduce output in valid JSON format:\n{\n  \"id\": \"{{ $('Loop Over Items').item.json.id }}\",\n  \"subject\": \"SUBJECT_LINE\",\n  \"category\": \"PRIMARY CATEGORY\",\n  \"subCategory\": \"SUBCATEGORY\", // use sparingly\n  \"analysis\": \"Brief 1-2 sentence explanation of category choice\"\n}\n- Replace \"SUBJECT_LINE\" with the actual subject of the email.\n- \"PRIMARY CATEGORY\" should be one of the categories listed above.\n- \"SUBCATEGORY\" should be \"Action\" if applicable; otherwise, omit or leave blank.\n- The \"analysis\" should be a brief 1-2 sentence explanation of why the category was chosen. Also, indicate if there was a match for the 'Contact' email and the email sender.\n\nImportant:\nYou may only use the categories and the subcategory listed above; do not create any additional categories or subcategories.\n\nNo additional text or tokens should be included outside the JSON output.\n"
+        }
+      },
+      "id": "61cecccf-589f-4514-b126-cfbfc7d94981",
+      "name": "AI: Analyse Email",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        3860,
+        240
+      ],
+      "typeVersion": 1.6
+    },
+    {
+      "parameters": {
+        "content": "## CRM Contact List Integration \nFor this workflow I am retrieving supplier & client contacts from Monday.com the email assistant has better context to categorise, prioritise and reply to emails.\nThe list is updated daily or you can change the scheduler trigger to update more or less frequently.\nYou could replace this with your own CRM.",
+        "height": 400,
+        "width": 760,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1420,
+        -620
+      ],
+      "id": "947eb4d7-9067-4144-819b-f53947ca77f8",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Categorise & Prioritise Emails Agent \n",
+        "height": 580,
+        "width": 700
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3640,
+        60
+      ],
+      "id": "79815a8f-5650-4ec9-97b3-c0201469d048",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Set the category & importance using the output from the agent\n",
+        "height": 280,
+        "width": 740,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4400,
+        120
+      ],
+      "id": "2e9411a8-30da-4ee5-9597-cb08e34049a5",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "138a734f-0ac5-4e50-a4af-b7255e11e862",
+      "name": "Check Mail Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        980,
+        260
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        1080,
+        -420
+      ],
+      "id": "709795fd-68ff-4881-9f30-6270dea83f7c",
+      "name": "Update Contacts Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "resource": "boardItem",
+        "operation": "getAll",
+        "boardId": "1840712625",
+        "groupId": "topics",
+        "returnAll": true
+      },
+      "id": "552803ce-3dae-415d-b14d-a7b990450482",
+      "name": "Monday.com - Get Contacts",
+      "type": "n8n-nodes-base.mondayCom",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        -440
+      ],
+      "credentials": {
+        "mondayComApi": {
+          "id": "wur9UFaP9YKCFZly",
+          "name": "Monday.com - API User"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "appNmgIGA4Fhculsn",
+          "mode": "list",
+          "cachedResultName": "AI Email Assistant",
+          "cachedResultUrl": "https://airtable.com/appNmgIGA4Fhculsn"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl8gTTEn96uFRDHE",
+          "mode": "list",
+          "cachedResultName": "Contacts",
+          "cachedResultUrl": "https://airtable.com/appNmgIGA4Fhculsn/tbl8gTTEn96uFRDHE"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Email": "={{ $json.column_values[6].text }}",
+            "First Name": "={{ $json.name.split(\" \",2).first() }}",
+            "Last Name": "={{ $json.name.split(\" \",2).last() }}",
+            "Type": "={{ $json.column_values[1].text }}"
+          },
+          "matchingColumns": [
+            "Email"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "First Name",
+              "displayName": "First Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Last Name",
+              "displayName": "Last Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Type",
+              "displayName": "Type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1920,
+        -440
+      ],
+      "id": "cf41ebb0-f295-4f1a-a49c-05471a4d9220",
+      "name": "Airtable - Contacts",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "Bgr0Fi30Oek2jpXT",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "html": "={{ $json.body.content }}",
+        "options": {}
+      },
+      "id": "6d698b4d-f18c-4e4a-9c83-8a39208aee8c",
+      "name": "Convert to Markdown",
+      "type": "n8n-nodes-base.markdown",
+      "position": [
+        2120,
+        240
+      ],
+      "notesInFlow": true,
+      "typeVersion": 1,
+      "notes": "Converts the body of the email to markdown"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "edb304e1-3e9f-4a77-918c-25646addbc53",
+              "name": "subject",
+              "type": "string",
+              "value": "={{ $json.subject }}"
+            },
+            {
+              "id": "57a3ef3a-2701-40d9-882f-f43a7219f148",
+              "name": "importance",
+              "type": "string",
+              "value": "={{ $json.importance }}"
+            },
+            {
+              "id": "d8317f4f-aa0e-4196-89af-cb016765490a",
+              "name": "sender",
+              "type": "object",
+              "value": "={{ $json.sender.emailAddress }}"
+            },
+            {
+              "id": "908716c8-9ff7-4bdc-a1a3-64227559635e",
+              "name": "from",
+              "type": "object",
+              "value": "={{ $json.from.emailAddress }}"
+            },
+            {
+              "id": "ce007329-e221-4c5a-8130-2f8e9130160f",
+              "name": "body",
+              "type": "string",
+              "value": "={{ $json.data\n    .replace(/<[^>]*>/g, '')                      // Remove HTML tags\n    .replace(/\\[(.*?)\\]\\((.*?)\\)/g, '')            // Remove Markdown links like [text](link)\n    .replace(/!\\[.*?\\]\\(.*?\\)/g, '')               // Remove Markdown images like ![alt](image-link)\n    .replace(/\\|/g, '')                            // Remove table separators \"|\"\n    .replace(/-{3,}/g, '')                         // Remove horizontal rule \"---\"\n    .replace(/\\n+/g, ' ')                          // Remove multiple newlines\n    .replace(/([^\\w\\s.,!?@])/g, '')                // Remove special characters except essential ones\n    .replace(/\\s{2,}/g, ' ')                       // Replace multiple spaces with a single space\n    .trim()                                        // Trim leading/trailing whitespace\n}}\n"
+            },
+            {
+              "id": "6abfcc56-7b0a-469e-82fc-ce294ed5162b",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "012109cc-dcba-464b-b3bc-17201b1ad436",
+      "name": "Email Messages",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2320,
+        240
+      ],
+      "typeVersion": 3.4,
+      "notes": "Set email fields"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appNmgIGA4Fhculsn",
+          "mode": "list",
+          "cachedResultName": "AI Email Assistant",
+          "cachedResultUrl": "https://airtable.com/appNmgIGA4Fhculsn"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblMSXbMFKETNToxV",
+          "mode": "list",
+          "cachedResultName": "Rules",
+          "cachedResultUrl": "https://airtable.com/appNmgIGA4Fhculsn/tblMSXbMFKETNToxV"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        2400,
+        720
+      ],
+      "id": "6d3933f3-3f2e-4268-8979-d6c93c961916",
+      "name": "Rules",
+      "executeOnce": true,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "Bgr0Fi30Oek2jpXT",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appNmgIGA4Fhculsn",
+          "mode": "list",
+          "cachedResultName": "AI Email Assistant",
+          "cachedResultUrl": "https://airtable.com/appNmgIGA4Fhculsn"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbliKDp5PoFNF7YI7",
+          "mode": "list",
+          "cachedResultName": "Categories",
+          "cachedResultUrl": "https://airtable.com/appNmgIGA4Fhculsn/tbliKDp5PoFNF7YI7"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        2300,
+        860
+      ],
+      "id": "9166d63f-0c16-490f-afb8-e30ef25c49da",
+      "name": "Categories",
+      "executeOnce": true,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "Bgr0Fi30Oek2jpXT",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appNmgIGA4Fhculsn",
+          "mode": "list",
+          "cachedResultName": "AI Email Assistant",
+          "cachedResultUrl": "https://airtable.com/appNmgIGA4Fhculsn"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl84EJr7y65ed4zh",
+          "mode": "list",
+          "cachedResultName": "Delete Rules",
+          "cachedResultUrl": "https://airtable.com/appNmgIGA4Fhculsn/tbl84EJr7y65ed4zh"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        2140,
+        960
+      ],
+      "id": "f48e5a29-0eee-4420-80d9-2b9b016fba0d",
+      "name": "Delete Rules",
+      "executeOnce": true,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "Bgr0Fi30Oek2jpXT",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appNmgIGA4Fhculsn",
+          "mode": "list",
+          "cachedResultName": "AI Email Assistant",
+          "cachedResultUrl": "https://airtable.com/appNmgIGA4Fhculsn"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl8gTTEn96uFRDHE",
+          "mode": "list",
+          "cachedResultName": "Contacts",
+          "cachedResultUrl": "https://airtable.com/appNmgIGA4Fhculsn/tbl8gTTEn96uFRDHE"
+        },
+        "filterByFormula": "={Email}='{{ $('Loop Over Items').item.json.from.address }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        3080,
+        240
+      ],
+      "id": "d6ad6091-2c7e-41b9-a9b3-b8715208cec0",
+      "name": "Contact",
+      "executeOnce": false,
+      "alwaysOutputData": true,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "Bgr0Fi30Oek2jpXT",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2720,
+        260
+      ],
+      "id": "bc1ede01-fa21-4446-a4e1-1a725a3a4887",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        3420,
+        220
+      ],
+      "id": "fcdd837d-8852-4dcf-924c-aba4f2cddeba",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "content": "## Match Contact\nCheck if the sender is an existing contact. Note in this workflow the contacts are dynamically loaded from Monday.com",
+        "height": 400,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3020,
+        60
+      ],
+      "id": "f790dd9b-19bb-4649-975e-00a511f2dd9f",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Microsoft Outlook23": {
+      "main": [
+        [
+          {
+            "node": "Convert to Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Microsoft Outlook23",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Rules",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Categories",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Delete Rules",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI: Analyse Email",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI: Analyse Email",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Category": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Set Importance",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI: Analyse Email": {
+      "main": [
+        [
+          {
+            "node": "Set Category",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Mail Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Microsoft Outlook23",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Contacts Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Monday.com - Get Contacts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Monday.com - Get Contacts": {
+      "main": [
+        [
+          {
+            "node": "Airtable - Contacts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Importance": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to Markdown": {
+      "main": [
+        [
+          {
+            "node": "Email Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Messages": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rules": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Categories": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Delete Rules": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Contact": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "AI: Analyse Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "e0fed20f-21be-4e21-bcc9-8af7062229dd",
+  "meta": {
+    "templateId": "2454",
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2128095e13afd30151f0fb53632960213a789cd45ed0afd3a7fb96a985bb4bcf"
+  },
+  "id": "reQhibpNwU63Y8sn",
+  "tags": []
+}
